@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#090a0f" />
+  <title>TWO — private messenger</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{--bg:#0b0d12;--panel:#11141a;--panel2:#181c24;--panel3:#202631;--text:#f7f8fc;--muted:#8f98aa;--accent:#6d5dfc;--accent2:#5848e8;--mine:#6d5dfc;--theirs:#20252f;--border:rgba(255,255,255,.075);--danger:#ff6474;--success:#58d89a;--shadow:0 24px 80px rgba(0,0,0,.42)}
+    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{min-height:100dvh}button,input,select{font:inherit}button{border:0;cursor:pointer;color:inherit}.hidden{display:none!important}
+    .screen{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px}.card{width:min(480px,100%);background:var(--panel);border:1px solid var(--border);border-radius:28px;padding:28px;box-shadow:var(--shadow)}
+    .brand{text-align:center}.logo{font-size:46px;font-weight:900;letter-spacing:-.08em}.tagline{color:var(--muted);margin:4px 0 24px}.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--panel2);border-radius:14px;padding:4px;margin-bottom:22px}.tab{padding:11px;border-radius:11px;background:transparent;color:var(--muted);font-weight:700}.tab.active{background:var(--panel3);color:var(--text)}
+    .field{margin-top:12px}.label{display:block;color:var(--muted);font-size:13px;margin:0 0 7px}.input{width:100%;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:14px;padding:13px 14px;outline:none}.input:focus{border-color:rgba(118,87,255,.75);box-shadow:0 0 0 3px rgba(118,87,255,.12)}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{width:100%;padding:13px 16px;border-radius:14px;background:var(--accent);font-weight:800;margin-top:14px}.btn:hover{background:var(--accent2)}.btn.secondary{background:var(--panel2);border:1px solid var(--border)}.btn.danger{background:rgba(255,100,116,.12);color:#ff8490;border:1px solid rgba(255,100,116,.2)}
+    .message{min-height:20px;font-size:13px;margin-top:10px;color:var(--muted);line-height:1.4}.message.error{color:var(--danger)}.message.success{color:var(--success)}.hint{text-align:center;color:var(--muted);font-size:12px;line-height:1.5;margin-top:16px}.divider{display:flex;gap:12px;align-items:center;color:var(--muted);font-size:12px;margin:18px 0}.divider:before,.divider:after{content:"";height:1px;background:var(--border);flex:1}
+    .file-input{width:100%;padding:10px;background:var(--panel2);border:1px dashed var(--border);border-radius:14px;color:var(--muted)}
+    .app{min-height:100dvh;display:none}.app-shell{min-height:100dvh;display:grid;grid-template-columns:360px 1fr;max-width:1380px;margin:auto;border-left:1px solid var(--border);border-right:1px solid var(--border);box-shadow:0 0 80px rgba(0,0,0,.18)}
+    .sidebar{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:0}.profile-bar{padding:14px 14px 12px;display:flex;align-items:center;gap:11px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,.018),transparent)}.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#a58cff);font-weight:900;overflow:hidden;flex:0 0 44px}.avatar img{width:100%;height:100%;object-fit:cover}.profile-copy{min-width:0}.profile-name{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profile-nick{color:var(--muted);font-size:12px}.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--panel2);margin-left:auto}.sidebar-actions{padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.chat-search{padding:0 12px 10px}.chat-search .input{height:42px;border-radius:14px;background:#151920}.small-btn{padding:10px;border-radius:12px;background:var(--panel2);border:1px solid var(--border);font-weight:700}.chat-list{overflow:auto;padding:4px 8px 16px}.chat-item{width:100%;text-align:left;background:transparent;padding:11px 10px;border-radius:15px;display:flex;gap:11px;align-items:center;transition:background .15s ease}.chat-item:active{transform:scale(.995)}.chat-item:hover,.chat-item.active{background:var(--panel2)}.chat-item .avatar{width:44px;height:44px;flex-basis:44px}.message-avatar{width:32px;height:32px;flex:0 0 32px;border-radius:50%;display:grid;place-items:center;background:var(--panel3);font-size:11px;font-weight:900;overflow:hidden;align-self:flex-end;margin-right:5px}.message-avatar img{width:100%;height:100%;object-fit:cover}.chat-info{min-width:0;flex:1}.chat-title{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-sub{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chat-time{font-size:10px;color:#737b8d;margin-left:auto;align-self:flex-start;padding-top:2px}.chat-badge{min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--accent);font-size:10px;display:grid;place-items:center;margin-left:auto}.chat-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:38px}.empty-list{text-align:center;color:var(--muted);font-size:13px;padding:40px 22px;line-height:1.5}
+    .chat-panel{min-width:0;display:flex;flex-direction:column;background:var(--bg)}.chat-header{height:72px;flex:0 0 72px;display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);background:rgba(17,20,26,.9);backdrop-filter:blur(18px);position:relative}.chat-header:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(109,93,252,.35),transparent)}.back-mobile{display:none}.head-copy{min-width:0}.head-title{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.head-status{font-size:12px;color:var(--success);margin-top:2px}.head-actions{margin-left:auto;display:flex;gap:7px}.room-code{color:var(--muted);font-size:12px;padding:9px 10px;background:var(--panel2);border-radius:10px}
+    .messages{flex:1;overflow-y:auto;padding:22px max(16px,calc((100vw - 980px)/2));display:flex;flex-direction:column;gap:7px;background:radial-gradient(circle at 50% 0,rgba(109,93,252,.045),transparent 35%)}.empty-chat{margin:auto;text-align:center;color:var(--muted);max-width:300px;line-height:1.55}.bubble-row{display:flex}.bubble-row.mine{justify-content:flex-end}.bubble{max-width:min(78%,620px);padding:10px 13px;border-radius:18px;background:var(--theirs);word-break:break-word;white-space:pre-wrap;box-shadow:0 2px 10px rgba(0,0,0,.12)}.mine .bubble{background:var(--mine);border-bottom-right-radius:5px}.theirs .bubble{border-bottom-left-radius:5px}.sender{font-size:11px;font-weight:800;color:#c6c9d4;margin-bottom:4px}.meta{color:rgba(255,255,255,.55);font-size:10px;margin-top:5px}.mine .sender{color:rgba(255,255,255,.8)}.composer{padding:10px max(12px,calc((100vw - 900px)/2)) max(12px,env(safe-area-inset-bottom));border-top:1px solid var(--border);background:rgba(18,20,26,.96);display:flex;gap:8px}.composer .input{flex:1;min-width:0;border-radius:20px}.send{width:48px;height:48px;flex:0 0 48px;border-radius:50%;background:var(--accent);font-size:20px}.send:disabled{opacity:.5} .composer-wrap{border-top:1px solid var(--border);background:rgba(18,20,26,.96)}.composer-wrap .composer{border-top:0}.reply-bar{display:none;align-items:center;gap:10px;padding:9px 14px;background:rgba(109,93,252,.08);border-left:3px solid var(--accent);font-size:12px}.reply-bar.show{display:flex}.reply-copy{min-width:0;flex:1}.reply-label{font-weight:800;color:#b7afff}.reply-text{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.reply-close{width:30px;height:30px;border-radius:9px;background:var(--panel2)}.composer-tools{display:flex;align-items:center;gap:6px}.tool-btn{width:42px;height:42px;border-radius:50%;background:var(--panel2);border:1px solid var(--border)}.emoji-panel{display:none;gap:5px;padding:8px 12px;overflow-x:auto}.emoji-panel.show{display:flex}.emoji-panel button{width:36px;height:36px;border-radius:10px;background:var(--panel2)}.typing-indicator{font-size:11px;color:var(--muted);min-height:16px;padding:0 18px 4px}.message-avatar{width:28px;height:28px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:linear-gradient(135deg,var(--accent),#a58cff);font-size:10px;font-weight:900;flex:0 0 28px;align-self:flex-end;margin-right:5px}.message-avatar img{width:100%;height:100%;object-fit:cover}.bubble-row.theirs{align-items:flex-end}.bubble{cursor:pointer}.bubble.selected{outline:2px solid rgba(109,93,252,.55);outline-offset:2px}.message-actions{position:fixed;z-index:20;display:none;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:5px;box-shadow:var(--shadow);gap:4px}.message-actions.show{display:flex}.message-actions button{background:var(--panel2);padding:9px 11px;border-radius:10px;font-size:12px}.message-actions button:hover{background:var(--panel3)}.edit-hint{font-size:11px;color:var(--muted);padding:0 16px 5px;display:none}.edit-hint.show{display:block}
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68);z-index:10}.modal .card{max-height:90dvh;overflow:auto}.modal-title{font-size:24px;font-weight:850;margin-bottom:5px}.modal-sub{color:var(--muted);font-size:13px;line-height:1.5}.code{font-size:38px;font-weight:900;letter-spacing:.16em;text-align:center;margin:20px 0}.share-link{color:var(--muted);font-size:12px;word-break:break-all;background:var(--panel2);padding:10px;border-radius:10px}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.modal-actions .btn{margin-top:12px}.profile-preview{display:flex;align-items:center;gap:12px;margin:8px 0 16px}.profile-preview .avatar{width:64px;height:64px;flex-basis:64px}
+    @media(max-width:820px){.app-shell{grid-template-columns:1fr;border:0}.sidebar{position:fixed;inset:0 0 0 0;z-index:4;width:100%;transform:translateX(0);transition:transform .2s ease}.chat-panel{display:none}.app.chat-open .sidebar{transform:translateX(-100%)}.app.chat-open .chat-panel{display:flex}.back-mobile{display:block;width:40px;height:40px;border-radius:12px;background:var(--panel2);font-size:22px}.room-code{display:none}.messages{padding-left:12px;padding-right:12px}.composer{padding-left:10px;padding-right:10px}.head-actions .share-head{display:none}}
+    @media(min-width:821px){.app{padding:0}.app-shell{min-height:100dvh}.chat-panel{min-height:100dvh}}
+    @media(max-width:520px){.card{padding:22px;border-radius:22px}.grid2{grid-template-columns:1fr}.logo{font-size:42px}.bubble{max-width:86%}.modal-actions{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <section id="authScreen" class="screen">
+    <div class="card">
+      <div class="brand"><div class="logo">TWO</div><div class="tagline">Private messenger for people who actually know each other.</div></div>
+      <div class="tabs"><button class="tab active" data-tab="login">Войти</button><button class="tab" data-tab="register">Регистрация</button></div>
+
+      <form id="loginForm">
+        <div class="field"><label class="label">Email</label><input class="input" id="loginEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+        <div class="field"><label class="label">Пароль</label><input class="input" id="loginPassword" type="password" autocomplete="current-password" required placeholder="••••••••"></div>
+        <button class="btn" type="submit">Войти</button>
+      </form>
+
+      <form id="registerForm" class="hidden">
+        <div class="grid2">
+          <div class="field"><label class="label">Имя</label><input class="input" id="regFirst" maxlength="40" required placeholder="Никита"></div>
+          <div class="field"><label class="label">Фамилия</label><input class="input" id="regLast" maxlength="40" required placeholder="Устюгов"></div>
+        </div>
+        <div class="field"><label class="label">Nickname</label><input class="input" id="regNick" maxlength="30" required placeholder="nikita"></div>
+        <div class="field"><label class="label">Email</label><input class="input" id="regEmail" type="email" autocomplete="email" required placeholder="you@example.com"></div>
+        <div class="field"><label class="label">Пароль</label><input class="input" id="regPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="минимум 6 символов"></div>
+        <div class="field"><label class="label">Фото профиля</label><input class="file-input" id="regAvatar" type="file" accept="image/*"></div>
+        <button class="btn" type="submit">Создать аккаунт</button>
+      </form>
+      <div id="authMessage" class="message"></div>
+      <div class="hint">TWO хранит комнаты и сообщения в Supabase. Пароль передаётся через защищённый Auth API, а доступ к данным дополнительно ограничивается RLS.</div>
+    </div>
+  </section>
+
+  <section id="app" class="app">
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="profile-bar">
+          <div id="myAvatar" class="avatar">T</div>
+          <div class="profile-copy"><div id="myName" class="profile-name">Пользователь</div><div id="myNick" class="profile-nick">@nickname</div></div>
+          <button id="profileBtn" class="icon-btn" title="Профиль">⚙</button>
+        </div>
+        <div class="sidebar-actions"><button id="newRoomBtn" class="small-btn">＋ Комната</button><button id="joinRoomBtn" class="small-btn">🔑 Код</button></div>
+        <div class="chat-search"><input id="chatSearch" class="input" placeholder="⌕  Поиск чатов" autocomplete="off"></div>
+        <div id="chatList" class="chat-list"><div class="empty-list">Здесь появятся ваши чаты.<br>Создайте комнату или войдите по коду.</div></div>
+      </aside>
+
+      <main class="chat-panel">
+        <header class="chat-header">
+          <button id="backMobile" class="back-mobile" aria-label="Назад">‹</button>
+          <div id="roomAvatar" class="avatar">T</div>
+          <div class="head-copy"><div id="roomTitle" class="head-title">Выберите комнату</div><div id="roomStatus" class="head-status">● готово</div></div>
+          <div class="head-actions"><span id="roomCode" class="room-code"></span><button id="shareHead" class="small-btn share-head">↗ Поделиться</button></div>
+        </header>
+        <main id="messages" class="messages"><div class="empty-chat">Выберите комнату слева.<br>Чат ждёт, как и большинство людей ждут ответа на сообщение. 😄</div></main>
+        <div class="composer-wrap"><div id="typingIndicator" class="typing-indicator"></div><div id="replyBar" class="reply-bar"><div class="reply-copy"><div class="reply-label">Ответ</div><div id="replyText" class="reply-text"></div></div><button id="replyClose" class="reply-close" type="button">×</button></div><div id="editHint" class="edit-hint">Редактирование сообщения · Esc отменить</div><div id="emojiPanel" class="emoji-panel"><button type="button" data-emoji="😀">😀</button><button type="button" data-emoji="😂">😂</button><button type="button" data-emoji="😍">😍</button><button type="button" data-emoji="😎">😎</button><button type="button" data-emoji="🔥">🔥</button><button type="button" data-emoji="❤️">❤️</button><button type="button" data-emoji="👍">👍</button><button type="button" data-emoji="👎">👎</button><button type="button" data-emoji="🎉">🎉</button><button type="button" data-emoji="🤝">🤝</button><button type="button" data-emoji="😢">😢</button><button type="button" data-emoji="😡">😡</button><button type="button" data-emoji="🤔">🤔</button><button type="button" data-emoji="🙈">🙈</button><button type="button" data-emoji="💯">💯</button><button type="button" data-emoji="🚀">🚀</button><button type="button" data-emoji="☕">☕</button><button type="button" data-emoji="🐱">🐱</button><button type="button" data-emoji="🐶">🐶</button><button type="button" data-emoji="🍕">🍕</button></div><form id="composer" class="composer"><div class="composer-tools"><button id="emojiBtn" class="tool-btn" type="button" title="Эмодзи">☺</button></div><input id="messageInput" class="input" maxlength="2000" placeholder="Сообщение..." autocomplete="off" disabled><button id="sendBtn" class="send" type="submit" disabled>➤</button></form></div>
+      </main>
+    </div>
+  </section>
+
+  <div id="roomModal" class="modal"><div class="card"><div class="modal-title">Новая комната</div><div class="modal-sub">Выберите тип. Приватная рассчитана максимум на двух участников, групповая не ограничена этим правилом.</div><div class="field"><label class="label">Название</label><input id="roomName" class="input" maxlength="60" placeholder="Например, Мы двое"></div><div class="field"><label class="label">Тип</label><select id="roomType" class="input"><option value="private">🔒 Приватная · 2 человека</option><option value="group">👥 Группа</option></select></div><div id="roomModalMsg" class="message"></div><div class="modal-actions"><button id="cancelRoom" class="btn secondary" type="button">Отмена</button><button id="createRoom" class="btn" type="button">Создать</button></div></div></div>
+
+  <div id="joinModal" class="modal"><div class="card"><div class="modal-title">Войти в комнату</div><div class="modal-sub">Введите шестизначный код приглашения.</div><div class="field"><label class="label">Код комнаты</label><input id="joinCode" class="input" maxlength="6" placeholder="ABC123" autocomplete="off"></div><div id="joinModalMsg" class="message"></div><div class="modal-actions"><button id="cancelJoin" class="btn secondary" type="button">Отмена</button><button id="doJoin" class="btn" type="button">Войти</button></div></div></div>
+
+  <div id="shareModal" class="modal"><div class="card"><div class="modal-title">Комната создана 🎉</div><div class="modal-sub">Передайте код или ссылку второму человеку. Интернет, наконец, делает что-то полезное.</div><div id="createdCode" class="code"></div><div id="shareLink" class="share-link"></div><div class="modal-actions"><button id="copyLink" class="btn secondary" type="button">Скопировать</button><button id="openCreated" class="btn" type="button">Открыть чат</button></div></div></div>
+
+  <div id="profileModal" class="modal"><div class="card"><div class="modal-title">Мой профиль</div><div class="profile-preview"><div id="profileAvatarPreview" class="avatar">T</div><div><div id="profileFullName" class="profile-name"></div><div id="profileEmail" class="profile-nick"></div></div></div><div class="grid2"><div class="field"><label class="label">Имя</label><input id="editFirst" class="input" maxlength="40"></div><div class="field"><label class="label">Фамилия</label><input id="editLast" class="input" maxlength="40"></div></div><div class="field"><label class="label">Nickname</label><input id="editNick" class="input" maxlength="30"></div><div class="field"><label class="label">Новое фото</label><input id="editAvatar" class="file-input" type="file" accept="image/*"></div><div id="profileMsg" class="message"></div><button id="saveProfile" class="btn" type="button">Сохранить профиль</button><button id="logoutBtn" class="btn danger" type="button">Выйти из аккаунта</button><button id="closeProfile" class="btn secondary" type="button">Закрыть</button></div></div>
+
+  <div id="messageActions" class="message-actions"><button id="replyMessageBtn" type="button">↩ Ответить</button><button id="editMessageBtn" type="button">✏️ Изменить</button><button id="deleteMessageBtn" type="button">🗑️ Удалить</button></div>
+
+<script>
+  const SUPABASE_URL = "https://faiicfzxjyaidxaxibpq.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_OtjwAWPplFR1krP6h6EQqw_cUscBE4G";
+  const { createClient } = window.supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null, currentProfile = null, currentRoom = null, currentChannel = null, roomsCache = [], lastMessages = new Map(), unreadRooms = new Map(), roomPeople = new Map(), selectedMessage = null, replyTo = null, editingMessageId = null, typingTimer = null, remoteTypingTimer = null;
+  const $ = id => document.getElementById(id);
+
+  function setMsg(id, text='', type=''){ const el=$(id); el.textContent=text; el.className='message'+(type?' '+type:''); }
+  function initials(name='T'){ return (name.trim().split(/\s+/).map(x=>x[0]).join('').slice(0,2)||'T').toUpperCase(); }
+  function timeText(iso){ return new Intl.DateTimeFormat('ru-RU',{hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); }
+  function dateText(iso){ return new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'2-digit'}).format(new Date(iso)); }
+  function makeCode(){ const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:6},()=>chars[Math.floor(Math.random()*chars.length)]).join(''); }
+  function escapeSelector(v){ return CSS.escape(String(v)); }
+
+  function setAvatar(el, profile){ el.innerHTML=''; if(profile?.avatar_url){ const img=document.createElement('img'); img.src=profile.avatar_url; img.alt=''; el.appendChild(img); } else el.textContent=initials(profile?.first_name || profile?.nickname || 'T'); }
+  function displayName(profile){ return [profile?.first_name,profile?.last_name].filter(Boolean).join(' ') || profile?.nickname || 'Пользователь'; }
+
+  function switchAuthTab(tab){
+    document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+    $('loginForm').classList.toggle('hidden',tab!=='login'); $('registerForm').classList.toggle('hidden',tab!=='register'); setMsg('authMessage');
+  }
+  document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchAuthTab(b.dataset.tab)));
+
+  async function handleLogin(e){
+    e.preventDefault(); setMsg('authMessage','Входим...');
+    const {error}=await db.auth.signInWithPassword({email:$('loginEmail').value.trim(),password:$('loginPassword').value});
+    if(error){ setMsg('authMessage',error.message,'error'); return; }
+    setMsg('authMessage','');
+  }
+
+  async function handleRegister(e){
+    e.preventDefault(); setMsg('authMessage','Создаём аккаунт...');
+    const first=$('regFirst').value.trim(), last=$('regLast').value.trim(), nick=$('regNick').value.trim(), email=$('regEmail').value.trim(), password=$('regPassword').value;
+    if(!first||!last||!nick) return setMsg('authMessage','Заполните имя, фамилию и nickname.','error');
+    const {data,error}=await db.auth.signUp({email,password,options:{data:{first_name:first,last_name:last,nickname:nick}}});
+    if(error){ setMsg('authMessage',error.message,'error'); return; }
+    if(data.session && data.user){
+      currentUser=data.user; await ensureProfile();
+      const file=$('regAvatar').files[0]; if(file) await uploadAvatar(file);
+      await bootApp();
+    } else {
+      setMsg('authMessage','Аккаунт создан. Если включено подтверждение email, проверьте почту, затем войдите в TWO.','success');
+      switchAuthTab('login'); $('loginEmail').value=email;
+    }
+  }
+
+  async function ensureProfile(){
+    const {data,error}=await db.from('profiles').select('*').eq('id',currentUser.id).maybeSingle();
+    if(error) throw error;
+    if(data){ currentProfile=data; return data; }
+    const meta=currentUser.user_metadata||{};
+    const {data:created,error:insertError}=await db.from('profiles').insert({id:currentUser.id,first_name:meta.first_name||'',last_name:meta.last_name||'',nickname:meta.nickname||''}).select().single();
+    if(insertError) throw insertError; currentProfile=created; return created;
+  }
+
+  async function uploadAvatar(file){
+    if(!currentUser) return;
+    if(!file.type.startsWith('image/')) throw new Error('Файл должен быть изображением.');
+    if(file.size>5*1024*1024) throw new Error('Фото должно быть меньше 5 МБ.');
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    const path=currentUser.id+'/avatar.'+ext;
+    const {error:uploadError}=await db.storage.from('avatars').upload(path,file,{upsert:true,contentType:file.type});
+    if(uploadError) throw uploadError;
+    const {data}=db.storage.from('avatars').getPublicUrl(path);
+    const {error:updateError}=await db.from('profiles').update({avatar_url:data.publicUrl,updated_at:new Date().toISOString()}).eq('id',currentUser.id);
+    if(updateError) throw updateError; currentProfile={...currentProfile,avatar_url:data.publicUrl};
+  }
+
+  async function bootApp(){
+    await ensureProfile();
+    $('authScreen').classList.add('hidden'); $('app').style.display='block';
+    renderMyProfile(); await loadRooms();
+    const invite=new URLSearchParams(location.search).get('room'); if(invite){ $('joinCode').value=invite.toUpperCase(); openModal('joinModal'); }
+  }
+  function renderMyProfile(){ $('myName').textContent=displayName(currentProfile); $('myNick').textContent=currentProfile?.nickname?'@'+currentProfile.nickname:(currentUser?.email||''); setAvatar($('myAvatar'),currentProfile); }
+
+  async function loadRooms(){
+    const {data,error}=await db.from('rooms').select('*').order('updated_at',{ascending:false,nullsFirst:false});
+    if(error){ $('chatList').innerHTML='<div class="empty-list">Не удалось загрузить комнаты.<br>'+error.message+'</div>'; return; }
+    roomsCache=data||[];
+    await Promise.all(roomsCache.slice(0,30).map(room=>loadRoomPeople(room.id)));
+    await loadRoomPreviews();
+    renderRoomList();
+    const saved=localStorage.getItem('two_current_room');
+    if(saved && !currentRoom){ const room=roomsCache.find(r=>String(r.id)===saved); if(room) await openRoom(room,true); }
+  }
+  async function loadRoomPreviews(){
+    lastMessages.clear();
+    for(const room of roomsCache.slice(0,30)){
+      const {data}=await db.from('messages').select('message,created_at,sender_id,sender').eq('room_id',room.id).order('created_at',{ascending:false}).limit(1);
+      if(data?.[0]) lastMessages.set(room.id,data[0]);
+    }
+  }
+
+  async function loadRoomPeople(roomId){
+    const {data,error}=await db.rpc('get_room_participants',{p_room_id:roomId});
+    if(error){ console.warn('Не удалось загрузить участников:',error.message); roomPeople.set(roomId,[]); return []; }
+    const people=data||[]; roomPeople.set(roomId,people); return people;
+  }
+
+  function getOtherPerson(roomId){
+    const people=roomPeople.get(roomId)||[];
+    return people.find(p=>p.id!==currentUser?.id) || null;
+  }
+  function renderRoomList(){
+    const list=$('chatList'); list.innerHTML='';
+    const q=($('chatSearch')?.value||'').trim().toLowerCase();
+    const visible=roomsCache
+      .filter(room=>{ const text=((room.name||'')+' '+room.code).toLowerCase(); return !q||text.includes(q); })
+      .sort((a,b)=>{
+        const am=lastMessages.get(a.id), bm=lastMessages.get(b.id);
+        const at=am?.created_at || a.updated_at || a.created_at || '';
+        const bt=bm?.created_at || b.updated_at || b.created_at || '';
+        return String(bt).localeCompare(String(at));
+      });
+    if(!visible.length){ list.innerHTML='<div class="empty-list">'+(q?'Ничего не найдено.':'Здесь появятся ваши чаты.<br>Создайте комнату или войдите по коду.')+'</div>'; return; }
+    visible.forEach(room=>{
+      const b=document.createElement('button'); b.className='chat-item'+(currentRoom?.id===room.id?' active':''); b.onclick=()=>openRoom(room);
+      const av=document.createElement('div'); av.className='avatar';
+      const other=getOtherPerson(room.id);
+      if(room.type==='private' && other?.avatar_url) setAvatar(av,other);
+      else if(room.type==='private' && other) av.textContent=initials(displayName(other));
+      else av.textContent=room.type==='group'?'👥':'2';
+      const info=document.createElement('div'); info.className='chat-info';
+      const title=document.createElement('div'); title.className='chat-title'; title.textContent=room.name||'Комната '+room.code;
+      const lm=lastMessages.get(room.id); const sub=document.createElement('div'); sub.className='chat-sub'; sub.textContent=lm?.message || (room.type==='group'?'Группа':'Приватная');
+      const right=document.createElement('div'); right.className='chat-right';
+      const tm=document.createElement('div'); tm.className='chat-time'; tm.textContent=lm?timeText(lm.created_at):'';
+      right.appendChild(tm); if(unreadRooms.get(room.id)){ const badge=document.createElement('div'); badge.className='chat-badge'; badge.textContent=unreadRooms.get(room.id); right.appendChild(badge); }
+      info.append(title,sub); b.append(av,info,right); list.appendChild(b);
+    });
+  }
+
+  function openModal(id){ $(id).style.display='flex'; }
+  function closeModal(id){ $(id).style.display='none'; }
+  ['roomModal','joinModal','shareModal','profileModal'].forEach(id=>$(id).addEventListener('click',e=>{if(e.target.id===id)closeModal(id)}));
+
+  async function createRoom(){
+    setMsg('roomModalMsg','Создаём...');
+    const name=$('roomName').value.trim()||'Без названия', type=$('roomType').value;
+    let code=makeCode(), room=null, error=null;
+    for(let i=0;i<5;i++){
+      const result=await db.from('rooms').insert({code,name,type,created_by:currentUser.id,updated_at:new Date().toISOString()}).select().single();
+      if(!result.error){room=result.data;break} error=result.error; code=makeCode();
+    }
+    if(!room){ setMsg('roomModalMsg',error?.message||'Не удалось создать комнату.','error'); return; }
+    const {error:memberError}=await db.from('chat_members').insert({room_id:room.id,user_id:currentUser.id,role:'owner'});
+    if(memberError){ setMsg('roomModalMsg','Комната создана, но не удалось добавить вас: '+memberError.message,'error'); return; }
+    closeModal('roomModal'); $('roomName').value=''; roomsCache.unshift(room); renderRoomList();
+    const link=location.origin+location.pathname+'?room='+encodeURIComponent(room.code); $('createdCode').textContent=room.code; $('shareLink').textContent=link; $('openCreated').onclick=()=>{closeModal('shareModal');openRoom(room)}; $('copyLink').onclick=()=>copyShare(link); openModal('shareModal');
+  }
+
+  async function joinRoom(){
+    const code=$('joinCode').value.trim().toUpperCase(); if(code.length!==6) return setMsg('joinModalMsg','Код должен содержать 6 символов.','error');
+    setMsg('joinModalMsg','Проверяем код...');
+    const {data,error}=await db.rpc('join_room_by_code',{p_code:code});
+    if(error){ setMsg('joinModalMsg',error.message,'error'); return; }
+    const room=Array.isArray(data)?data[0]:data; if(!room){setMsg('joinModalMsg','Комната не найдена.','error');return;}
+    closeModal('joinModal'); $('joinCode').value=''; await loadRooms(); openRoom(room);
+  }
+
+  async function openRoom(room, restoring=false){
+    currentRoom=room; localStorage.setItem('two_current_room',String(room.id)); unreadRooms.delete(room.id); cancelReply(); cancelEdit(); hideMessageActions(); renderRoomList(); $('app').classList.add('chat-open'); $('roomTitle').textContent=room.name||'Комната '+room.code; $('roomCode').textContent=room.code; $('roomAvatar').textContent='';
+    await loadRoomPeople(room.id);
+    const other=getOtherPerson(room.id);
+    if(room.type==='private' && other?.avatar_url) setAvatar($('roomAvatar'),other);
+    else if(room.type==='private' && other) $('roomAvatar').textContent=initials(displayName(other));
+    else $('roomAvatar').textContent=room.type==='group'?'👥':'2';
+    $('roomStatus').textContent='● подключение...'; $('messageInput').disabled=false; $('sendBtn').disabled=false; await loadMessages(); await subscribeRoom(); }
+  async function loadMessages(){
+    $('messages').innerHTML='<div class="empty-chat">Загрузка сообщений…</div>';
+    const {data,error}=await db.from('messages').select('*').eq('room_id',currentRoom.id).order('created_at',{ascending:true});
+    if(error){$('messages').innerHTML='<div class="empty-chat">Ошибка загрузки: '+error.message+'</div>';return;}
+    $('messages').innerHTML=''; if(!data?.length){$('messages').innerHTML='<div class="empty-chat">Здесь пока тихо.<br>Напишите первым. 😎</div>';return;} data.forEach(renderMessage); scrollMessages();
+  }
+  function renderMessage(row){
+    const existing=document.querySelector('[data-message-id="'+escapeSelector(row.id)+'"]');
+    if(existing) existing.remove();
+    const mine=row.sender_id===currentUser.id || (!row.sender_id && row.sender===currentProfile?.first_name);
+    const r=document.createElement('div'); r.className='bubble-row '+(mine?'mine':'theirs'); r.dataset.messageId=row.id;
+    if(!mine && row.sender_id){
+      const person=(roomPeople.get(currentRoom.id)||[]).find(p=>p.id===row.sender_id);
+      const av=document.createElement('div'); av.className='message-avatar';
+      if(person?.avatar_url) setAvatar(av,person); else av.textContent=initials(person?displayName(person):(row.sender||'П'));
+      r.appendChild(av);
+    }
+    const b=document.createElement('div'); b.className='bubble';
+    if(row.deleted_at){ b.innerHTML='<div style="font-style:italic;color:var(--muted)">Сообщение удалено</div>'; }
+    else {
+      if(!mine && row.sender){const s=document.createElement('div');s.className='sender';s.textContent=row.sender;b.appendChild(s)}
+      if(row.reply_to_id){
+        const target=document.querySelector('[data-message-id="'+escapeSelector(row.reply_to_id)+'"]');
+        const q=document.createElement('div'); q.className='reply-preview'; q.textContent=target?.innerText?.slice(0,90)||'Ответ на сообщение'; q.onclick=()=>target?.scrollIntoView({behavior:'smooth',block:'center'}); b.appendChild(q);
+      }
+      const t=document.createElement('div');t.textContent=row.message;b.appendChild(t);
+      const m=document.createElement('div');m.className='meta';m.textContent=(mine?'Вы':(row.sender||'Пользователь'))+' · '+timeText(row.created_at)+(row.edited_at?' · изменено':'');b.appendChild(m);
+    }
+    r.appendChild(b); $('messages').appendChild(r);
+    b.addEventListener('click',e=>{ if(row.deleted_at)return; selectedMessage=row; showMessageActions(b,row,e); });
+    b.addEventListener('contextmenu',e=>{e.preventDefault(); if(!row.deleted_at){selectedMessage=row;showMessageActions(b,row,e)}});
+    let press; b.addEventListener('touchstart',e=>{press=setTimeout(()=>{if(!row.deleted_at){selectedMessage=row;showMessageActions(b,row,e.touches[0])}},550)},{passive:true}); b.addEventListener('touchend',()=>clearTimeout(press));
+  }
+  function showMessageActions(el,row,ev){
+    document.querySelectorAll('.bubble.selected').forEach(x=>x.classList.remove('selected')); el.classList.add('selected');
+    const menu=$('messageActions'); menu.classList.add('show'); const x=Math.min((ev.clientX||window.innerWidth/2),window.innerWidth-260); const y=Math.min((ev.clientY||window.innerHeight/2),window.innerHeight-70); menu.style.left=Math.max(8,x-120)+'px'; menu.style.top=Math.max(8,y-60)+'px'; $('editMessageBtn').style.display=row.sender_id===currentUser.id?'block':'none'; $('deleteMessageBtn').style.display=row.sender_id===currentUser.id?'block':'none'; }
+  function hideMessageActions(){ $('messageActions').classList.remove('show'); document.querySelectorAll('.bubble.selected').forEach(x=>x.classList.remove('selected')); selectedMessage=null; }
+  function startReply(row){ replyTo=row; $('replyText').textContent=(row.sender||'Пользователь')+': '+String(row.message||'').slice(0,120); $('replyBar').classList.add('show'); hideMessageActions(); $('messageInput').focus(); }
+  function cancelReply(){ replyTo=null; $('replyBar')?.classList.remove('show'); }
+  function startEdit(row){ editingMessageId=row.id; $('messageInput').value=row.message||''; $('messageInput').focus(); $('messageInput').setSelectionRange($('messageInput').value.length,$('messageInput').value.length); $('editHint').classList.add('show'); $('sendBtn').textContent='✓'; hideMessageActions(); }
+  function cancelEdit(){ editingMessageId=null; if($('editHint'))$('editHint').classList.remove('show'); if($('sendBtn'))$('sendBtn').textContent='➤'; }
+  async function editMessage(){ if(!editingMessageId)return; const text=$('messageInput').value.trim(); if(!text)return; const {data,error}=await db.from('messages').update({message:text,edited_at:new Date().toISOString()}).eq('id',editingMessageId).eq('sender_id',currentUser.id).select().single(); if(error){alert('Не удалось изменить сообщение: '+error.message);return;} renderMessage(data); cancelEdit(); $('messageInput').value=''; $('messageInput').focus(); }
+  async function deleteMessage(){ if(!selectedMessage)return; if(!confirm('Удалить это сообщение?'))return; const {data,error}=await db.from('messages').update({deleted_at:new Date().toISOString(),message:''}).eq('id',selectedMessage.id).eq('sender_id',currentUser.id).select().single(); if(error){alert('Не удалось удалить сообщение: '+error.message);return;} renderMessage(data); hideMessageActions(); }
+  function scrollMessages(){const m=$('messages');m.scrollTop=m.scrollHeight}
+  async function subscribeRoom(){
+    if(currentChannel) await db.removeChannel(currentChannel);
+    currentChannel=db.channel('room-'+currentRoom.id)
+      .on('postgres_changes',{event:'*',schema:'public',table:'messages',filter:'room_id=eq.'+currentRoom.id},payload=>{
+        if(payload.eventType==='INSERT'){
+          renderMessage(payload.new); lastMessages.set(currentRoom.id,payload.new);
+          const cached=roomsCache.find(r=>r.id===currentRoom.id); if(cached) cached.updated_at=payload.new.created_at;
+          if(payload.new.sender_id!==currentUser.id && document.hidden) unreadRooms.set(currentRoom.id,(unreadRooms.get(currentRoom.id)||0)+1);
+          renderRoomList(); scrollMessages();
+        } else if(payload.eventType==='UPDATE'){ renderMessage(payload.new); }
+      })
+      .on('broadcast',{event:'typing'},payload=>{
+        if(payload.payload?.user_id===currentUser.id)return;
+        const person=(roomPeople.get(currentRoom.id)||[]).find(p=>p.id===payload.payload?.user_id); $('typingIndicator').textContent=payload.payload?.typing?(displayName(person)||'Собеседник')+' печатает…':''; clearTimeout(remoteTypingTimer); if(payload.payload?.typing) remoteTypingTimer=setTimeout(()=>$('typingIndicator').textContent='',2200);
+      })
+      .subscribe(status=>{$('roomStatus').textContent=status==='SUBSCRIBED'?'● online':'● подключение...'});
+  }
+  function broadcastTyping(){ if(!currentChannel||!currentRoom)return; currentChannel.send({type:'broadcast',event:'typing',payload:{user_id:currentUser.id,typing:true}}); clearTimeout(typingTimer); typingTimer=setTimeout(()=>currentChannel?.send({type:'broadcast',event:'typing',payload:{user_id:currentUser.id,typing:false}}),1200); }
+  async function sendMessage(e){
+    e.preventDefault();
+    if(editingMessageId){ await editMessage(); return; }
+    const text=$('messageInput').value.trim(); if(!text||!currentRoom)return; $('sendBtn').disabled=true;
+    const now=new Date().toISOString();
+    const payload={room_id:currentRoom.id,sender_id:currentUser.id,sender:displayName(currentProfile),message:text,created_at:now};
+    if(replyTo) payload.reply_to_id=replyTo.id;
+    const {data:sent,error}=await db.from('messages').insert(payload).select().single();
+    $('sendBtn').disabled=false;
+    if(error){alert('Не удалось отправить сообщение: '+error.message);return;}
+    lastMessages.set(currentRoom.id,sent||payload); await db.from('rooms').update({updated_at:now}).eq('id',currentRoom.id);
+    const cached=roomsCache.find(r=>r.id===currentRoom.id); if(cached) cached.updated_at=now; renderRoomList();
+    $('messageInput').value=''; cancelReply(); $('messageInput').focus();
+  }
+
+  async function copyShare(link){ try{await navigator.clipboard.writeText(link);$('copyLink').textContent='Скопировано ✓';}catch(_){$('shareLink').textContent=link+'\n\nСкопируйте ссылку вручную.';} }
+  async function shareCurrent(){ if(!currentRoom)return; const link=location.origin+location.pathname+'?room='+encodeURIComponent(currentRoom.code); if(navigator.share){try{await navigator.share({title:'TWO',text:'Войди в нашу комнату TWO',url:link})}catch(_){}}else await copyShare(link); }
+
+  async function openProfile(){
+    $('editFirst').value=currentProfile?.first_name||'';$('editLast').value=currentProfile?.last_name||'';$('editNick').value=currentProfile?.nickname||'';$('profileFullName').textContent=displayName(currentProfile);$('profileEmail').textContent=currentUser.email||'';setAvatar($('profileAvatarPreview'),currentProfile);setMsg('profileMsg');openModal('profileModal');
+  }
+  async function saveProfile(){
+    setMsg('profileMsg','Сохраняем...'); const first=$('editFirst').value.trim(),last=$('editLast').value.trim(),nick=$('editNick').value.trim();
+    const {data,error}=await db.from('profiles').update({first_name:first,last_name:last,nickname:nick,updated_at:new Date().toISOString()}).eq('id',currentUser.id).select().single();
+    if(error){setMsg('profileMsg',error.message,'error');return} currentProfile=data;
+    const file=$('editAvatar').files[0]; if(file){try{await uploadAvatar(file)}catch(err){setMsg('profileMsg','Профиль сохранён, но фото не загрузилось: '+err.message,'error');renderMyProfile();return}}
+    renderMyProfile();setAvatar($('profileAvatarPreview'),currentProfile);$('profileFullName').textContent=displayName(currentProfile);setMsg('profileMsg','Профиль сохранён ✓','success');
+  }
+  async function logout(){ if(currentChannel)await db.removeChannel(currentChannel); await db.auth.signOut(); currentUser=null;currentProfile=null;currentRoom=null;roomsCache=[];localStorage.removeItem('two_current_room');$('app').classList.remove('chat-open');$('app').style.display='none';$('authScreen').classList.remove('hidden');$('loginPassword').value='';switchAuthTab('login'); }
+
+  $('loginForm').addEventListener('submit',handleLogin);$('registerForm').addEventListener('submit',handleRegister);$('newRoomBtn').onclick=()=>{setMsg('roomModalMsg');openModal('roomModal')};$('joinRoomBtn').onclick=()=>{setMsg('joinModalMsg');openModal('joinModal')};$('createRoom').onclick=createRoom;$('cancelRoom').onclick=()=>closeModal('roomModal');$('doJoin').onclick=joinRoom;$('cancelJoin').onclick=()=>closeModal('joinModal');$('profileBtn').onclick=openProfile;$('saveProfile').onclick=saveProfile;$('logoutBtn').onclick=logout;$('closeProfile').onclick=()=>closeModal('profileModal');$('composer').addEventListener('submit',sendMessage);$('shareHead').onclick=shareCurrent;
+  $('backMobile').onclick=()=>{$('app').classList.remove('chat-open');currentRoom=null;if(currentChannel){db.removeChannel(currentChannel);currentChannel=null;}$('messageInput').disabled=true;$('sendBtn').disabled=true;renderRoomList()};
+  $('joinCode').addEventListener('input',e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,''));$('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')joinRoom()});
+  $('chatSearch').addEventListener('input',renderRoomList);
+  $('messageInput').addEventListener('input',broadcastTyping);
+  $('emojiBtn').onclick=()=>$('emojiPanel').classList.toggle('show');
+  document.querySelectorAll('#emojiPanel [data-emoji]').forEach(b=>b.onclick=()=>{const input=$('messageInput'); const a=input.selectionStart||input.value.length; const z=input.selectionEnd||a; input.value=input.value.slice(0,a)+b.dataset.emoji+input.value.slice(z); input.focus(); input.setSelectionRange(a+b.dataset.emoji.length,a+b.dataset.emoji.length);});
+  $('replyClose').onclick=cancelReply;
+  $('replyMessageBtn').onclick=()=>selectedMessage&&startReply(selectedMessage);
+  $('editMessageBtn').onclick=()=>selectedMessage&&startEdit(selectedMessage);
+  $('deleteMessageBtn').onclick=deleteMessage;
+  document.addEventListener('click',e=>{if(!e.target.closest('#messageActions')&&!e.target.closest('.bubble'))hideMessageActions();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){hideMessageActions();if(editingMessageId){cancelEdit();$('messageInput').value='';}}});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden && currentRoom){unreadRooms.delete(currentRoom.id);renderRoomList();}});
+
+  db.auth.onAuthStateChange(async(event,session)=>{ if(session?.user){currentUser=session.user; try{await bootApp()}catch(err){console.error(err);setMsg('authMessage','Не удалось загрузить профиль: '+err.message,'error')}} else if(event==='SIGNED_OUT'){ $('app').style.display='none';$('authScreen').classList.remove('hidden'); } });
+  (async()=>{const {data}=await db.auth.getSession();if(data.session){currentUser=data.session.user;try{await bootApp()}catch(err){console.error(err);}}})();
+</script>
+</body>
+</html>
